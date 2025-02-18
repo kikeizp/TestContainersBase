@@ -4,6 +4,14 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <PackageId>IntegrationTestingBase</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Enrique Izquierdo</Authors>
+    <Company>Nextlane</Company>
+    <Description>Base library for integration testing with Testcontainers, AWS, and ASP.NET Core</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/kikeizp/TestContainersBase.git</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
