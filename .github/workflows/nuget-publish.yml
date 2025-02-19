@@ -3,7 +3,7 @@ name: Auto Tag & Publish NuGet Package on Release Branch Merge
 on:
   push:
     branches:
-      - main 
+      - main
 
 jobs:
   publish:
@@ -20,6 +20,9 @@ jobs:
         with:
           dotnet-version: 9.0.x  # Adjust if necessary
 
+      - name: Run Tests
+        run: dotnet test Tests/Tests.csproj --no-build --configuration Release
+
       - name: Get previous branch name from commit message
         id: get_version
         run: |
@@ -32,8 +35,8 @@ jobs:
 
       - name: Update version in .csproj
         run: |
-          echo "Updating version in .csproj to $VERSION"
-          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" *.csproj
+          echo "Updating version in IntegrationTestingBase.csproj to $VERSION"
+          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" IntegrationTestingBase/IntegrationTestingBase.csproj
 
       - name: Commit version bump and create tag
         env:
@@ -47,13 +50,13 @@ jobs:
           git push origin main --tags
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore IntegrationTestingBase/IntegrationTestingBase.csproj
 
-      - name: Build the project
-        run: dotnet build --configuration Release --no-restore
+      - name: Build the main project
+        run: dotnet build IntegrationTestingBase/IntegrationTestingBase.csproj --configuration Release --no-restore
 
       - name: Pack NuGet package
-        run: dotnet pack --configuration Release --output nupkg --no-build /p:PackageVersion=${{ env.VERSION }}
+        run: dotnet pack IntegrationTestingBase/IntegrationTestingBase.csproj --configuration Release --output nupkg --no-build /p:PackageVersion=${{ env.VERSION }}
 
       - name: Publish to GitHub Packages
         run: dotnet nuget push nupkg/*.nupkg --source "https://nuget.pkg.github.com/kikeizp/index.json" --api-key ${{ secrets.GH_PAT }}
