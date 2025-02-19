@@ -6,7 +6,7 @@ using DotNet.Testcontainers.Configurations;
 
 namespace IntegrationTestingBase.Containers.AWS
 {
-public class AwsContainer(AwsConfig config) : BaseContainer
+    public class AwsContainer(AwsConfig config) : BaseContainer
     {
         private static string FormatServices(IEnumerable<AwsServices> services)
         {
@@ -18,12 +18,12 @@ public class AwsContainer(AwsConfig config) : BaseContainer
             return string.Join(",", services.Select(s => s.ToString().ToLowerInvariant()));
         }
 
-        protected override string ImageName => "localstack/localstack:latest";
+        protected override string ImageName => config.Image ?? "localstack/localstack:latest";
         protected override ushort Port => 4566;
 
         private string Region => "us-east-1";
 
-        protected override Dictionary<string, string> EnvVariables => new ()
+        protected override Dictionary<string, string> EnvVariables => new()
         {
             {"SERVICES", FormatServices(config.Services)},
             {"AWS_ACCESS_KEY_ID", config.Credentials.AccessKey},
@@ -44,14 +44,14 @@ public class AwsContainer(AwsConfig config) : BaseContainer
         {
             var credentials = GetCredentials();
 
-            AmazonServiceClient client =  config switch
+            AmazonServiceClient client = config switch
             {
                 AmazonDynamoDBConfig awsConfig => new AmazonDynamoDBClient(credentials, awsConfig),
                 AmazonSQSConfig awsConfig => new AmazonSQSClient(credentials, awsConfig),
                 _ => throw new NotFoundException("Client do not exist")
             };
 
-            return (TClient) client;
+            return (TClient)client;
         }
 
         private BasicAWSCredentials GetCredentials()

@@ -2,31 +2,57 @@ using System.Text.Json.Serialization;
 
 namespace IntegrationTestingBase.Containers.API
 {
-    public record Request(
-        [property: JsonPropertyName("method")] string Method,
-        [property: JsonPropertyName("url")] string? Url = null,
-        [property: JsonPropertyName("urlPattern")] string? UrlPattern = null,
-        [property: JsonPropertyName("bodyPatterns")] List<BodyPattern>? BodyPatterns = null
-    );
+    public record Request
+    {
 
-    public record BodyPattern(
-        [property: JsonPropertyName("equalToJson")] string EqualToJson
-    );
+        [JsonPropertyName("method")]
+        public required string Method { get; set; }
+        [JsonPropertyName("url")]
+        public string? Url { get; set; } = null;
+        [JsonPropertyName("urlPattern")]
+        public string? UrlPattern { get; set; } = null;
+        [JsonPropertyName("bodyPatterns")]
+        public List<BodyPattern>? BodyPatterns { get; set; } = null;
 
-    public record Response(
-        [property: JsonPropertyName("status")] int Status,
-        [property: JsonPropertyName("body")] string Body,
-        [property: JsonPropertyName("headers")] Dictionary<string, string> Headers
-    );
+    }
 
-    public record Mapping(
-        [property: JsonPropertyName("request")] Request Request,
-        [property: JsonPropertyName("response")] Response Response
-    );
+    public record BodyPattern
+    {
 
-    public record MockApiConfig(
-        [property: JsonPropertyName("mappings")] List<Mapping> Mappings
-    ) : BaseConfig;
+        [JsonPropertyName("equalToJson")]
+        public required string EqualToJson { get; set; }
+
+    }
+
+    public record Response
+    {
+
+        [JsonPropertyName("status")]
+        public required int Status { get; set; }
+
+        [JsonPropertyName("body")]
+        public required string Body { get; set; }
+
+        [JsonPropertyName("headers")]
+        public required Dictionary<string, string> Headers { get; set; }
+
+    }
+
+    public record Mapping
+    {
+        [JsonPropertyName("request")]
+        public required Request Request { get; set; }
+        [JsonPropertyName("response")]
+        public required Response Response { get; set; }
+    }
+
+    public record MockApiConfig : BaseConfig
+    {
+
+        [JsonPropertyName("mappings")]
+        public required List<Mapping> Mappings { get; set; }
+
+    }
 
 }
 

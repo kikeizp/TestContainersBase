@@ -1,0 +1,55 @@
+name: Auto Tag & Publish NuGet Package on Release Branch Merge
+
+on:
+  push:
+    branches:
+      - main  # Trigger when code is merged into main
+
+jobs:
+  publish:
+    if: startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch full history for tags
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 9.0.x  # Adjust if necessary
+
+      - name: Extract version from branch name
+        id: extract_version
+        run: |
+          echo "Extracting version from branch name: ${{ github.head_ref }}"
+          VERSION=${GITHUB_HEAD_REF#release/}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Version set to $VERSION"
+
+      - name: Update version in .csproj
+        run: |
+          echo "Updating .csproj to version $VERSION"
+          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" *.csproj
+
+      - name: Commit version bump and create tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(release): v$VERSION [skip ci]" || echo "No changes to commit"
+          git tag v$VERSION
+          git push origin main --tags
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build the project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Pack NuGet package
+        run: dotnet pack --configuration Release --output nupkg --no-build /p:PackageVersion=${{ env.VERSION }}
+
+      - name: Publish to GitHub Packages
+        run: dotnet nuget push nupkg/*.nupkg --source "https://nuget.pkg.github.com/kikeizp/index.json" --api-key ${{ secrets.GH_PAT }}

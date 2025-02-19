@@ -4,18 +4,26 @@ using DotNet.Testcontainers.Configurations;
 
 namespace IntegrationTestingBase.Containers.API
 {
+
     public class MockApiContainer(MockApiConfig config) : BaseContainer
     {
-        protected override string ImageName => "wiremock/wiremock:latest";
+        protected override string ImageName => config.Image ?? "wiremock/wiremock:latest";
         protected override ushort Port => 8080;
 
-        private static Mapping DefaultMapping => new(
-            new Request("GET", "/"),
-            new Response(200, 
-                "{ \"message\": \"SUCCESS\" }",
-                new Dictionary<string, string> { { "Content-Type", "application/json" } }
-            )
-        );
+        private static Mapping DefaultMapping => new ()
+        {
+            Request = new Request 
+            {
+                Method = "GET",
+                Url = "/"
+            },
+            Response = new Response
+            {
+                Status = 200,
+                Body = "{ \"message\": \"SUCCESS\" }",
+                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+            }
+        };
 
         private string MappingPath => SaveMappingsToFile([..config.Mappings, DefaultMapping ]);
         private static string ContainerMappingPath => "/home/wiremock/mappings/mapping.json";
@@ -29,7 +37,9 @@ namespace IntegrationTestingBase.Containers.API
         {
             string tempFilePath = Path.Combine(Path.GetTempPath(), $"wiremock-mappings-{Guid.NewGuid()}.json");
 
-            string jsonContent = JsonSerializer.Serialize(new MockApiConfig(mappings));
+            string jsonContent = JsonSerializer.Serialize(new MockApiConfig {
+                Mappings = mappings
+            });
 
             File.WriteAllText(tempFilePath, jsonContent);
 
