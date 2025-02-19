@@ -1,16 +1,16 @@
-using IntegrationTestingBase.Containers;
 using IntegrationTestingBase.Containers.API;
 using IntegrationTestingBase.Containers.AWS;
 using IntegrationTestingBase.Containers.Custom;
 using IntegrationTestingBase.Containers.Neo4j;
 using IntegrationTestingBase.Containers.PGSQL;
+using IntegrationTestingBase.Core.Interfaces;
 
-namespace IntegrationTestingBase
+namespace IntegrationTestingBase.Containers.Registry
 {
-    public sealed class ContainerRegistry()
+    public sealed class TestContainerRegistry : IContainerRegistry
     {
-        private static readonly ContainerRegistry Instance = new();
-        public static ContainerRegistry GetInstance => Instance;
+        private static readonly TestContainerRegistry Instance = new();
+        public static TestContainerRegistry GetInstance => Instance;
 
         private readonly Dictionary<string, BaseContainer> Containers = [];
 

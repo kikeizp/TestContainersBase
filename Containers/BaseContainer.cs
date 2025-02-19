@@ -1,41 +1,12 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
+using IntegrationTestingBase.Core.Interfaces;
 
 namespace IntegrationTestingBase.Containers
 {
 
-    /// <summary>
-    /// Interface representing the basic operations and configurations for a container.
-    /// </summary>
-    public interface IBaseContainer
-    {
-        /// <summary>
-        /// Starts the container asynchronously.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        Task Start();
-
-        /// <summary>
-        /// Stops the container asynchronously.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        Task Stop();
-
-        /// <summary>
-        /// Retrieves the mapped public port of the container.
-        /// </summary>
-        /// <returns>The mapped port as an unsigned short.</returns>
-        ushort GetPort();
-
-        /// <summary>
-        /// Retrieves the base URL of the running container.
-        /// </summary>
-        /// <returns>The URL as a string.</returns>
-        string GetUrl();
-    }
-
-    public abstract class BaseContainer : IBaseContainer
+    public abstract class BaseContainer : IBaseTestContainer
     {
         private const string BaseUrl = "http://localhost";
         protected abstract ushort Port { get; }

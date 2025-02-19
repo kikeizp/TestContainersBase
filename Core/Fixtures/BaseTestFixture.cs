@@ -1,22 +1,22 @@
-namespace IntegrationTestingBase
+using IntegrationTestingBase.Core.Factories;
+
+namespace IntegrationTestingBase.Core.Fixtures
 {
-    public abstract class BaseTestFixture<TFactory, TProgram> : IDisposable
-        where TFactory : BaseConfigurableFactory<TProgram>, new()
+    public abstract class SharedTestFixture<TFactory, TProgram> : IDisposable
+        where TFactory : ConfigurableTestFactory<TProgram>, new()
         where TProgram : class
     {
         public TFactory Factory { get; }
         public IServiceProvider Services => Factory.Services;
 
-        public BaseTestFixture()
+        public SharedTestFixture()
         {
-            Console.WriteLine("🔄 Initializing Test Environment...");
             Factory = new TFactory();
             Factory.Server.CreateClient();
         }
 
         public void Dispose()
         {
-            Console.WriteLine("🛑 Disposing Test Environment...");
             Factory.Dispose();
             GC.SuppressFinalize(this);
         }
