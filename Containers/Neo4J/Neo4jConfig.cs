@@ -5,7 +5,7 @@ namespace IntegrationTestingBase.Containers.Neo4j
         public required string Username { get; set; }
         public required string Password { get; set; }
     }
-    public record Neo4jContainerConfig : BaseConfig
+    public record Neo4jConfig : BaseConfig
     {
         public required Neo4jCredentials Credentials { get; set; }
         public required string HeapInitialSize { get; set; }

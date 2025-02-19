@@ -3,7 +3,7 @@ using Neo4j.Driver;
 
 namespace IntegrationTestingBase.Containers.Neo4j
 {
-    public class Neo4jContainer(Neo4jContainerConfig config) : BaseContainer
+    public class Neo4jContainer(Neo4jConfig config) : BaseContainer
     {
         protected override string ImageName => config.Image ?? "neo4j:latest";
         protected override ushort Port => 7687; 

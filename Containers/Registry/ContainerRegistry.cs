@@ -1,6 +1,7 @@
 using IntegrationTestingBase.Containers.API;
 using IntegrationTestingBase.Containers.AWS;
 using IntegrationTestingBase.Containers.Custom;
+using IntegrationTestingBase.Containers.MySQL;
 using IntegrationTestingBase.Containers.Neo4j;
 using IntegrationTestingBase.Containers.PGSQL;
 using IntegrationTestingBase.Core.Interfaces;
@@ -30,8 +31,9 @@ namespace IntegrationTestingBase.Containers.Registry
                 {
                     AwsConfig awsConfig => new AwsContainer(awsConfig),
                     MockApiConfig mockApiConfig => new MockApiContainer(mockApiConfig),
-                    Neo4jContainerConfig neo4jConfig => new Neo4jContainer(neo4jConfig),
+                    Neo4jConfig neo4jConfig => new Neo4jContainer(neo4jConfig),
                     PostgreSQLConfig postgreConfig => new PostgreSQLContainer(postgreConfig),
+                    MySQLConfig mySqlConfig => new MySQLContainer(mySqlConfig),
                     CustomContainerConfig customConfig => new CustomContainer(customConfig),
                     _ => throw new Exception($"Unknown config type: {config.GetType()}")
                 };
