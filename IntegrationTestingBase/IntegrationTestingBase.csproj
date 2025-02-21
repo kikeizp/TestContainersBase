@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 
     <PackageId>IntegrationTestingBase</PackageId>
-    <Version>1.2.2</Version>
+    <Version>1.2.3</Version>
     <Authors>Enrique Izquierdo</Authors>
     <Company>Nextlane</Company>
     <Description>Base library for integration testing with Testcontainers, AWS, and ASP.NET Core</Description>
