@@ -32,7 +32,8 @@ jobs:
           sleep 10  # Adjust sleep time based on Docker initialization time
   
       - name: Run Tests
-        run: dotnet test
+        run: dotnet test Tests/Tests.csproj --no-build --configuration Release --logger "console;verbosity=diagnostic"
+
 
       # - name: Get previous branch name from commit message
       #   id: get_version
