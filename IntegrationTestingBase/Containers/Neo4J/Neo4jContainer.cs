@@ -13,7 +13,7 @@ namespace IntegrationTestingBase.Containers.Neo4j
             { "NEO4J_AUTH", $"{config.Credentials.Username}/{config.Credentials.Password}" },
             { "NEO4J_dbms_memory_heap_initial__size", config.HeapInitialSize },
             { "NEO4J_dbms_memory_heap_max__size", config.HeapMaxSize },
-            { "NEO4JLABS_PLUGINS", "[\"apoc\"]" }
+            { "NEO4J_PLUGINS", "[\"apoc\"]" },
         };
 
         protected override IWaitForContainerOS DefineWaitStrategy(IWaitForContainerOS strategy)
@@ -23,7 +23,7 @@ namespace IntegrationTestingBase.Containers.Neo4j
 
         public IDriver GetClient()
         {
-            string uri = $"bolt://{GetUrl()}:{Port}";
+            string uri = $"bolt://localhost:{GetPort()}";
             return GraphDatabase.Driver(uri, AuthTokens.Basic(config.Credentials.Username, config.Credentials.Password));
         }
     }
