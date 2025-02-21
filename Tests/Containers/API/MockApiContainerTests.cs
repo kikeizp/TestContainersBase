@@ -1,17 +1,21 @@
 using System.Text.Json;
 using IntegrationTestingBase.Containers.API;
+using IntegrationTestingBase.Containers;
 
 namespace Tests.Containers.API
 {
-    public class MockApiContainerTests : IAsyncLifetime
+    [CollectionDefinition("Wiremock collection")]
+    public class ContainerCollection : ICollectionFixture<WiremockLifecycleFixture>{}
+    public class WiremockLifecycleFixture : IDisposable
     {
-        private readonly MockApiContainer MockApiContainer;
-        private readonly HttpClient Client = new();
+        public BaseContainer Container { get; private set; }
 
-        private readonly MockApiConfig Config = new()
+        public WiremockLifecycleFixture()
         {
-            Image = "wiremock/wiremock:latest",
-            Mappings = [
+            Container = new MockApiContainer(new MockApiConfig
+            {
+                Image = "wiremock/wiremock:latest",
+                Mappings = [
                     new Mapping
                     {
                         Request = new Request
@@ -35,63 +39,127 @@ namespace Tests.Containers.API
                         },
                         Response = new Response
                         {
+                            Status = 201,
+                            Body = "{ \"message\": \"CREATED\" }",
+                            Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                        }
+                    },
+                    new Mapping
+                    {
+                        Request = new Request
+                        {
+                            Method = "DELETE",
+                            UrlPattern = "/delete"
+                        },
+                        Response = new Response
+                        {
+                            Status = 204,
+                            Body = "",
+                            Headers = []
+                        }
+                    },
+                    new Mapping
+                    {
+                        Request = new Request
+                        {
+                            Method = "PUT",
+                            UrlPattern = "/update"
+                        },
+                        Response = new Response
+                        {
                             Status = 200,
-                            Body = "{ \"message\": \"SUCCESS\" }",
+                            Body = "{ \"message\": \"UPDATED\" }",
                             Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                         }
                     }
                 ]
-        };
-
-        public MockApiContainerTests()
-        {
-            MockApiContainer = new(Config);
+            });
+            Container.Start().GetAwaiter().GetResult();
         }
 
-        public async Task InitializeAsync()
+        public void Dispose()
         {
-            await MockApiContainer.Start();
+            Container?.Stop().GetAwaiter().GetResult();
+            GC.SuppressFinalize(this);
         }
+    }
 
-        public async Task DisposeAsync()
-        {
-            await MockApiContainer.Stop();
-        }
+    [Collection("Wiremock collection")]
+    public class MockApiContainerTests(WiremockLifecycleFixture fixture)
+    {
+        private readonly WiremockLifecycleFixture Fixture = fixture;
+        private readonly HttpClient Client = new();
 
         [Fact]
         public async Task ShouldRetrieveSuccessWhenGetTest()
         {
-            // Arrange
-            HttpResponseMessage response = await Client.GetAsync(MockApiContainer.GetUrl());
+            HttpResponseMessage response = await Client.GetAsync(Fixture.Container.GetUrl());
             response.EnsureSuccessStatusCode();
 
-            // Assert
             var responseBody = JsonSerializer.Deserialize<Dictionary<string, object>>(await response.Content.ReadAsStringAsync());
 
-            // Assert
             Assert.NotNull(responseBody);
             Assert.True(responseBody.ContainsKey("message"));
             Assert.Equal("SUCCESS", responseBody["message"].ToString());
         }
-
 
         [Fact]
-        public async Task ShouldCreate()
+        public async Task ShouldCreateResourceWhenPostTest()
         {
-            // Arrange
-            HttpResponseMessage response = await Client.GetAsync(MockApiContainer.GetUrl());
-            response.EnsureSuccessStatusCode();
+            var content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await Client.PostAsync(Fixture.Container.GetUrl(), content);
 
-            // Assert
+            Assert.Equal(201, (int)response.StatusCode);
+
             var responseBody = JsonSerializer.Deserialize<Dictionary<string, object>>(await response.Content.ReadAsStringAsync());
 
-            // Assert
             Assert.NotNull(responseBody);
-            Assert.True(responseBody.ContainsKey("message"));
-            Assert.Equal("SUCCESS", responseBody["message"].ToString());
-
+            Assert.Equal("CREATED", responseBody["message"].ToString());
         }
 
-    }
+        [Fact]
+        public async Task ShouldReturnNotFoundWhenInvalidEndpoint()
+        {
+            HttpResponseMessage response = await Client.GetAsync($"{Fixture.Container.GetUrl()}/invalid");
 
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task ShouldReturnUpdatedWhenPutTest()
+        {
+            var content = new StringContent("{ \"data\": \"update\" }", System.Text.Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await Client.PutAsync($"{Fixture.Container.GetUrl()}/update", content);
+
+            Assert.Equal(200, (int)response.StatusCode);
+
+            var responseBody = JsonSerializer.Deserialize<Dictionary<string, object>>(await response.Content.ReadAsStringAsync());
+
+            Assert.NotNull(responseBody);
+            Assert.Equal("UPDATED", responseBody["message"].ToString());
+        }
+
+        [Fact]
+        public async Task ShouldReturnNoContentWhenDeleteTest()
+        {
+            HttpResponseMessage response = await Client.DeleteAsync($"{Fixture.Container.GetUrl()}/delete");
+
+            Assert.Equal(204, (int)response.StatusCode);
+        }
+
+        [Fact]
+        public async Task ShouldHandleConcurrentRequests()
+        {
+            var tasks = Enumerable.Range(0, 10).Select(async _ =>
+            {
+                HttpResponseMessage response = await Client.GetAsync(Fixture.Container.GetUrl());
+                response.EnsureSuccessStatusCode();
+                var responseBody = JsonSerializer.Deserialize<Dictionary<string, object>>(await response.Content.ReadAsStringAsync());
+                Assert.NotNull(responseBody);
+                Assert.Equal("SUCCESS", responseBody["message"].ToString());
+            });
+
+            await Task.WhenAll(tasks);
+        }
+    }
 }
